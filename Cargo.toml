@@ -1,0 +1,26 @@
+[package]
+name    = "clipboard-tts"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "clipboard-tts"
+path = "src/main.rs"
+
+[lib]
+name = "clipboard_tts"
+path = "src/lib.rs"
+
+[dependencies]
+arboard         = "3"
+rodio           = "0.17"
+anyhow          = "1"
+thiserror       = "1"
+
+[dev-dependencies]
+# no extra deps — all tests use std only
+
+[profile.release]
+opt-level = 3
+lto       = true
+strip     = true
