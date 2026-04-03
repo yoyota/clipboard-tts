@@ -20,18 +20,6 @@ fn empty_text_preview_is_empty() {
     assert_eq!(preview(""), "");
 }
 
-// TODO(human): implement boundary tests for preview()
-// Test that text exactly at the limit and over the limit are handled correctly.
-//   ● Learn by Doing
-
-//   Context: preview() truncates text to PREVIEW_MAX_CHARS (251 bytes) to stay within Linux's NAME_MAX. The existing tests cover short and empty inputs, but the boundary — exactly at 251 and one
-//   over — is untested. This is the most important case because off-by-one errors here cause silent filename corruption.
-
-//   Your Task: In src/tts_tests.rs, implement two tests under the TODO(human) comment. Name them text_at_limit_is_unchanged and text_over_limit_is_truncated.
-
-//   Guidance: Use "a".repeat(N) to build inputs. For the over-limit case, think carefully: should you assert the full string content, or just the length? Consider what PREVIEW_MAX_CHARS is exported
-//    as (pub(crate) is not needed — it's in scope via use super::*).
-
 #[test]
 fn text_at_limit_is_unchanged() {
     let text = "a".repeat(PREVIEW_MAX_CHARS);
