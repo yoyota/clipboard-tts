@@ -1,6 +1,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
+use std::path::PathBuf;
+
 use clap::Parser;
 use google_cloud_texttospeech_v1::client::TextToSpeech;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
@@ -15,12 +17,16 @@ use clipboard_tts::{
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Cli {
+    /// Directory where synthesized MP3 files are saved.
+    #[arg(long)]
+    save_dir: PathBuf,
+
     /// Clipboard poll interval in milliseconds.
-    #[arg(long, default_value_t = 500, global = true)]
+    #[arg(long, default_value_t = 500)]
     poll_ms: u64,
 
     /// Log verbosity: error | warn | info | debug | trace
-    #[arg(long, default_value = "info", global = true, env = "RUST_LOG")]
+    #[arg(long, default_value = "info", env = "RUST_LOG")]
     log_level: String,
 }
 
@@ -45,11 +51,12 @@ async fn main() -> anyhow::Result<()> {
 
     info!(poll_ms = cli.poll_ms, "listening for clipboard changes");
 
+    let save_dir = cli.save_dir.to_string_lossy().into_owned();
     let client = Arc::new(TextToSpeech::builder().build().await?);
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
     clipboard::watch(Duration::from_millis(cli.poll_ms), move |ClipboardEvent { text }| {
-        match tokio::task::block_in_place(|| handle.block_on(synthesize(&client, text))) {
+        match tokio::task::block_in_place(|| handle.block_on(synthesize(&client, text, &save_dir))) {
             Ok(audio) => {
                 if let Err(e) = play(&stream_handle, audio) {
                     error!(error = %e, "playback failed");
