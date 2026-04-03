@@ -10,9 +10,21 @@ use std::fs;
 const FILE_EXTENSION: &str = ".mp3";
 const PREVIEW_MAX_CHARS: usize = 255 - FILE_EXTENSION.len();
 
+/// Truncates `text` to at most `PREVIEW_MAX_CHARS` bytes for use as a filename.
+/// Safe for ASCII-only input (which `sanitize()` guarantees).
+fn preview(text: &str) -> &str {
+    &text[..text.len().min(PREVIEW_MAX_CHARS)]
+}
+
+/// Constructs the absolute save path for an audio file from a preview slice.
+fn save_path(dir: &str, preview: &str) -> String {
+    format!("{}/{}{}", dir, preview, FILE_EXTENSION)
+}
+
 pub async fn synthesize(
     client: &TextToSpeech,
     text: String,
+    save_dir: &str,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let input = SynthesisInput::default()
         .set_input_source(InputSource::Text(text.clone()));
@@ -32,9 +44,14 @@ pub async fn synthesize(
         .send()
         .await?;
 
-    let preview = &text[..text.len().min(PREVIEW_MAX_CHARS)];
-    let filename = format!("/home/yoyota/Music/{}{}", preview, FILE_EXTENSION);
+    let filename = save_path(save_dir, preview(&text));
     fs::write(&filename, &response.audio_content)?;
 
     Ok(response.audio_content.to_vec())
 }
+
+// ─── unit tests ──────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+#[path = "tts_tests.rs"]
+mod tests;
