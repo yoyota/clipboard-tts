@@ -1,6 +1,6 @@
 [package]
-name    = "clipboard-tts"
-version = "0.1.0"
+name = "clipboard-tts"
+version = "0.5.0"
 edition = "2021"
 
 [[bin]]
@@ -12,15 +12,17 @@ name = "clipboard_tts"
 path = "src/lib.rs"
 
 [dependencies]
-arboard         = "3"
-rodio           = "0.17"
-anyhow          = "1"
-thiserror       = "1"
-
-[dev-dependencies]
-# no extra deps — all tests use std only
+arboard = "3"
+clap = { version = "4", features = ["derive", "env"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tokio = { version = "1", features = ["full"] }
+rodio = { version = "0.17", features = ["mp3"] }
+anyhow = "1"
+thiserror = "1"
+google-cloud-texttospeech-v1 = "1.9.0"
 
 [profile.release]
 opt-level = 3
-lto       = true
-strip     = true
+lto = true
+strip = true
