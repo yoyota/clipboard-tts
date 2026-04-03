@@ -1,7 +1,6 @@
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
-
-use std::path::PathBuf;
 
 use clap::Parser;
 use google_cloud_texttospeech_v1::client::TextToSpeech;
