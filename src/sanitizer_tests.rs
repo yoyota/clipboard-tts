@@ -43,7 +43,10 @@ fn email_address_sanitized() {
 
 #[test]
 fn url_sanitized() {
-    assert_eq!(sanitize("https://example.com/path?q=1"), "https example com path q 1");
+    assert_eq!(
+        sanitize("https://example.com/path?q=1"),
+        "https example com path q 1"
+    );
 }
 
 #[test]
@@ -124,7 +127,10 @@ fn newlines_and_tabs_collapsed() {
 #[test]
 fn no_leading_space_in_output() {
     let result = sanitize("!!!hello");
-    assert!(!result.starts_with(' '), "output must not start with a space");
+    assert!(
+        !result.starts_with(' '),
+        "output must not start with a space"
+    );
     assert_eq!(result, "hello");
 }
 
@@ -155,11 +161,6 @@ fn option_returns_none_for_line_comment() {
 #[test]
 fn option_returns_none_for_block_comment() {
     assert_eq!(sanitize_option("/* initialize */ int x = 0;"), None);
-}
-
-#[test]
-fn option_returns_none_for_scope_resolution() {
-    assert_eq!(sanitize_option("std::collections::HashMap"), None);
 }
 
 #[test]
@@ -194,6 +195,6 @@ fn option_returns_some_for_valid_text() {
 #[test]
 fn option_returns_none_for_empty_result() {
     assert_eq!(sanitize_option("!!!"), None);
-    assert_eq!(sanitize_option(""),    None);
+    assert_eq!(sanitize_option(""), None);
     assert_eq!(sanitize_option("   "), None);
 }

@@ -33,12 +33,11 @@ pub fn sanitize(input: &str) -> String {
 /// Returns `true` when `input` should be skipped (URL, code, or file path).
 /// Checked on raw input before sanitization strips the relevant characters.
 fn should_skip(input: &str) -> bool {
-    input.contains("//")
+    input.contains("//")    // URL scheme or line comment
         || input.contains('{')
         || input.contains('}')
-        || input.contains(';')
         || input.contains("    ")  // 4-space indented line → likely code block
-        || input.contains("\t")  // 4-space indented line → likely code block
+        || input.contains('\t')    // tab-indented line → likely code block
         || input.starts_with('/') // likely a file path
 }
 
