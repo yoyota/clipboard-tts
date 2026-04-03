@@ -30,11 +30,31 @@ pub fn sanitize(input: &str) -> String {
     out
 }
 
+/// Returns `true` when `input` should be skipped (URL, code, or file path).
+/// Checked on raw input before sanitization strips the relevant characters.
+fn should_skip(input: &str) -> bool {
+    input.contains("//")
+        || input.contains('{')
+        || input.contains('}')
+        || input.contains(';')
+        || input.contains("    ")  // 4-space indented line → likely code block
+        || input.contains("\t")  // 4-space indented line → likely code block
+        || input.starts_with('/') // likely a file path
+}
+
 /// Returns `None` when the sanitized result is empty or blank, signalling
 /// that the clipboard content should be silently skipped.
+/// Also returns `None` for URLs, code, and file paths.
 pub fn sanitize_option(input: &str) -> Option<String> {
+    if should_skip(input) {
+        return None;
+    }
     let s = sanitize(input);
-    if s.is_empty() { None } else { Some(s) }
+    if s.is_empty() {
+        None
+    } else {
+        Some(s)
+    }
 }
 
 // ─── unit tests ──────────────────────────────────────────────────────────────
