@@ -1,4 +1,5 @@
 use super::*;
+use id3::Tag;
 
 // ── constants ─────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,22 @@ fn long_text_produces_valid_filename() {
 fn empty_preview_produces_valid_path() {
     let path = save_path("/tmp/audio", preview(""));
     assert_eq!(path, "/tmp/audio/.mp3");
+}
+
+// ── write_lyrics_tag() ────────────────────────────────────────────────────────
+
+#[test]
+fn uslt_tag_roundtrip() {
+    let path = "/tmp/tts_test_uslt.mp3";
+    let text = "hello world".to_string();
+
+    // Write a stub file so id3 has something to append the tag to.
+    std::fs::write(path, b"ID3").unwrap();
+    write_lyrics_tag(path, text.clone()).unwrap();
+
+    let tag = Tag::read_from_path(path).unwrap();
+    let lyric = tag.lyrics().next().unwrap();
+    assert_eq!(lyric.text, text);
 }
 
 // ── save_path() ───────────────────────────────────────────────────────────────

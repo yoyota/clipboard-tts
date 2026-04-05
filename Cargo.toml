@@ -21,6 +21,7 @@ rodio = { version = "0.17", features = ["mp3"] }
 anyhow = "1"
 thiserror = "1"
 google-cloud-texttospeech-v1 = "1.9.0"
+id3 = "1"
 
 [profile.release]
 opt-level = 3

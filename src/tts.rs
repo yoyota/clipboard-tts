@@ -3,6 +3,8 @@ use google_cloud_texttospeech_v1::model::synthesis_input::InputSource;
 use google_cloud_texttospeech_v1::model::{
     AudioConfig, AudioEncoding, SynthesisInput, VoiceSelectionParams,
 };
+use id3::frame::{Content, Lyrics};
+use id3::{Frame, Tag, TagLike, Version};
 use std::fs;
 
 // Linux NAME_MAX is 255 bytes; subtract the ".mp3" extension.
@@ -19,6 +21,19 @@ fn preview(text: &str) -> &str {
 /// Constructs the absolute save path for an audio file from a preview slice.
 fn save_path(dir: &str, preview: &str) -> String {
     format!("{}/{}{}", dir, preview, FILE_EXTENSION)
+}
+
+fn write_lyrics_tag(path: &str, text: String) -> Result<(), id3::Error> {
+    let mut tag = Tag::new();
+    tag.add_frame(Frame::with_content(
+        "USLT",
+        Content::Lyrics(Lyrics {
+            lang: "eng".to_string(),
+            description: String::new(),
+            text,
+        }),
+    ));
+    tag.write_to_path(path, Version::Id3v24)
 }
 
 pub async fn synthesize(
@@ -46,6 +61,8 @@ pub async fn synthesize(
 
     let filename = save_path(save_dir, preview(&text));
     fs::write(&filename, &response.audio_content)?;
+
+    write_lyrics_tag(&filename, text)?;
 
     Ok(response.audio_content.to_vec())
 }
