@@ -68,6 +68,49 @@ fn uslt_tag_roundtrip() {
     assert_eq!(lyric.text, text);
 }
 
+// ── cap_text() ────────────────────────────────────────────────────────────────
+
+#[test]
+fn google_tts_max_bytes_is_5000() {
+    assert_eq!(GOOGLE_TTS_MAX_BYTES, 5000);
+}
+
+#[test]
+fn short_text_is_not_capped() {
+    assert_eq!(cap_text("hello", 200), "hello");
+}
+
+#[test]
+fn text_at_cap_is_unchanged() {
+    let text = "a".repeat(200);
+    assert_eq!(cap_text(&text, 200), text);
+}
+
+#[test]
+fn text_over_cap_is_truncated() {
+    let capped = cap_text(&"a".repeat(210), 200);
+    assert_eq!(capped.chars().count(), 200);
+}
+
+#[test]
+fn cap_text_handles_multibyte_chars_safely() {
+    // Each Korean char is 3 bytes — byte-slicing would panic, chars() is safe.
+    let capped = cap_text(&"가".repeat(210), 200);
+    assert_eq!(capped.chars().count(), 200);
+}
+
+#[test]
+fn cap_text_respects_custom_max() {
+    let capped = cap_text(&"a".repeat(100), 50);
+    assert_eq!(capped.chars().count(), 50);
+}
+
+#[test]
+fn cap_text_default_allows_up_to_api_limit() {
+    let text = "a".repeat(GOOGLE_TTS_MAX_BYTES);
+    assert_eq!(cap_text(&text, GOOGLE_TTS_MAX_BYTES), text);
+}
+
 // ── save_path() ───────────────────────────────────────────────────────────────
 
 #[test]

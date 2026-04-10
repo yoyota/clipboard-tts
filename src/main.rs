@@ -9,7 +9,7 @@ use tracing::{error, info, warn};
 
 use clipboard_tts::{
     clipboard::{self, ClipboardEvent},
-    tts::synthesize,
+    tts::{synthesize, GOOGLE_TTS_MAX_BYTES},
 };
 
 /// Clipboard Text-to-Speech — speaks whatever you copy.
@@ -23,6 +23,11 @@ struct Cli {
     /// Clipboard poll interval in milliseconds.
     #[arg(long, default_value_t = 500)]
     poll_ms: u64,
+
+    /// Maximum characters sent to the TTS API per request.
+    /// Defaults to the Google Cloud TTS API limit (5000 bytes).
+    #[arg(long, default_value_t = GOOGLE_TTS_MAX_BYTES)]
+    text_cap: usize,
 
     /// Log verbosity: error | warn | info | debug | trace
     #[arg(long, default_value = "info", env = "RUST_LOG")]
@@ -51,18 +56,22 @@ async fn main() -> anyhow::Result<()> {
     info!(poll_ms = cli.poll_ms, "listening for clipboard changes");
 
     let save_dir = cli.save_dir.to_string_lossy().into_owned();
+    let text_cap = cli.text_cap;
     let client = Arc::new(TextToSpeech::builder().build().await?);
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
-    clipboard::watch(Duration::from_millis(cli.poll_ms), move |ClipboardEvent { text }| {
-        match tokio::task::block_in_place(|| handle.block_on(synthesize(&client, text, &save_dir))) {
+    clipboard::watch(
+        Duration::from_millis(cli.poll_ms),
+        move |ClipboardEvent { text }| match tokio::task::block_in_place(|| {
+            handle.block_on(synthesize(&client, text, text_cap, &save_dir))
+        }) {
             Ok(audio) => {
                 if let Err(e) = play(&stream_handle, audio) {
                     error!(error = %e, "playback failed");
                 }
             }
             Err(e) => warn!(error = %e, "synthesis failed"),
-        }
-    })?;
+        },
+    )?;
     Ok(())
 }

@@ -12,6 +12,13 @@ use std::fs;
 const FILE_EXTENSION: &str = ".mp3";
 const PREVIEW_MAX_CHARS: usize = 255 - FILE_EXTENSION.len();
 
+/// Maximum bytes the Google Cloud TTS API accepts in a single request.
+pub const GOOGLE_TTS_MAX_BYTES: usize = 5000;
+
+fn cap_text(text: &str, max: usize) -> String {
+    text.chars().take(max).collect()
+}
+
 /// Truncates `text` to at most `PREVIEW_MAX_CHARS` bytes for use as a filename.
 /// Safe for ASCII-only input (which `sanitize()` guarantees).
 fn preview(text: &str) -> &str {
@@ -39,17 +46,17 @@ fn write_lyrics_tag(path: &str, text: String) -> Result<(), id3::Error> {
 pub async fn synthesize(
     client: &TextToSpeech,
     text: String,
+    text_cap: usize,
     save_dir: &str,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let input = SynthesisInput::default()
-        .set_input_source(InputSource::Text(text.clone()));
+    let text = cap_text(&text, text_cap);
+    let input = SynthesisInput::default().set_input_source(InputSource::Text(text.clone()));
 
     let voice = VoiceSelectionParams::default()
         .set_language_code("en-US")
         .set_name("en-US-Chirp3-HD-Charon");
 
-    let audio_config =
-        AudioConfig::default().set_audio_encoding(AudioEncoding::Mp3);
+    let audio_config = AudioConfig::default().set_audio_encoding(AudioEncoding::Mp3);
 
     let response = client
         .synthesize_speech()
