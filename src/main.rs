@@ -16,9 +16,9 @@ use clipboard_tts::{
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 struct Cli {
-    /// Directory where synthesized MP3 files are saved.
+    /// Directory where synthesized MP3 files are saved. Defaults to the current working directory.
     #[arg(long)]
-    save_dir: PathBuf,
+    save_dir: Option<PathBuf>,
 
     /// Clipboard poll interval in milliseconds.
     #[arg(long, default_value_t = 500)]
@@ -28,6 +28,10 @@ struct Cli {
     /// Defaults to the Google Cloud TTS API limit (5000 bytes).
     #[arg(long, default_value_t = GOOGLE_TTS_MAX_BYTES)]
     text_cap: usize,
+
+    /// Speaking rate passed to the TTS API (0.25–4.0, where 1.0 is normal speed).
+    #[arg(long, default_value_t = 1.0)]
+    speaking_rate: f64,
 
     /// Log verbosity: error | warn | info | debug | trace
     #[arg(long, default_value = "info", env = "RUST_LOG")]
@@ -55,15 +59,21 @@ async fn main() -> anyhow::Result<()> {
 
     info!(poll_ms = cli.poll_ms, "listening for clipboard changes");
 
-    let save_dir = cli.save_dir.to_string_lossy().into_owned();
+    let save_dir = cli
+        .save_dir
+        .map(Ok)
+        .unwrap_or_else(std::env::current_dir)?
+        .to_string_lossy()
+        .into_owned();
     let text_cap = cli.text_cap;
+    let speaking_rate = cli.speaking_rate;
     let client = Arc::new(TextToSpeech::builder().build().await?);
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
     clipboard::watch(
         Duration::from_millis(cli.poll_ms),
         move |ClipboardEvent { text }| match tokio::task::block_in_place(|| {
-            handle.block_on(synthesize(&client, text, text_cap, &save_dir))
+            handle.block_on(synthesize(&client, text, text_cap, &save_dir, speaking_rate))
         }) {
             Ok(audio) => {
                 if let Err(e) = play(&stream_handle, audio) {

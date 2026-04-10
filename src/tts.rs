@@ -1,3 +1,5 @@
+use std::fs;
+
 use google_cloud_texttospeech_v1::client::TextToSpeech;
 use google_cloud_texttospeech_v1::model::synthesis_input::InputSource;
 use google_cloud_texttospeech_v1::model::{
@@ -5,7 +7,6 @@ use google_cloud_texttospeech_v1::model::{
 };
 use id3::frame::{Content, Lyrics};
 use id3::{Frame, Tag, TagLike, Version};
-use std::fs;
 
 // Linux NAME_MAX is 255 bytes; subtract the ".mp3" extension.
 // Caps the filename and log preview — does not truncate what is sent to the API.
@@ -48,6 +49,7 @@ pub async fn synthesize(
     text: String,
     text_cap: usize,
     save_dir: &str,
+    speaking_rate: f64,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let text = cap_text(&text, text_cap);
     let input = SynthesisInput::default().set_input_source(InputSource::Text(text.clone()));
@@ -56,7 +58,9 @@ pub async fn synthesize(
         .set_language_code("en-US")
         .set_name("en-US-Chirp3-HD-Charon");
 
-    let audio_config = AudioConfig::default().set_audio_encoding(AudioEncoding::Mp3);
+    let audio_config = AudioConfig::default()
+        .set_audio_encoding(AudioEncoding::Mp3)
+        .set_speaking_rate(speaking_rate);
 
     let response = client
         .synthesize_speech()
