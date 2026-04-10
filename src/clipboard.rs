@@ -31,10 +31,7 @@ fn hash_str(s: &str) -> u64 {
 ///
 /// # Errors
 /// Returns an error if the clipboard cannot be opened at startup.
-pub fn watch<F>(
-    poll_interval: Duration,
-    mut on_event: F,
-) -> Result<(), arboard::Error>
+pub fn watch<F>(poll_interval: Duration, mut on_event: F) -> Result<(), arboard::Error>
 where
     F: FnMut(ClipboardEvent),
 {
@@ -42,7 +39,11 @@ where
     let mut last_hash: Option<u64> = None;
 
     loop {
-        if let Some(clean) = clipboard.get_text().ok().and_then(|raw| sanitize_option(&raw)) {
+        if let Some(clean) = clipboard
+            .get_text()
+            .ok()
+            .and_then(|raw| sanitize_option(&raw))
+        {
             let h = hash_str(&clean);
             if last_hash != Some(h) {
                 last_hash = Some(h);

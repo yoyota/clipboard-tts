@@ -88,9 +88,15 @@ fn special_char_only_clipboard_content_is_silently_skipped() {
 
 #[test]
 fn clipboard_event_eq() {
-    let a = ClipboardEvent { text: "hello".into() };
-    let b = ClipboardEvent { text: "hello".into() };
-    let c = ClipboardEvent { text: "world".into() };
+    let a = ClipboardEvent {
+        text: "hello".into(),
+    };
+    let b = ClipboardEvent {
+        text: "hello".into(),
+    };
+    let c = ClipboardEvent {
+        text: "world".into(),
+    };
     assert_eq!(a, b);
     assert_ne!(a, c);
 }
