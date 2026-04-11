@@ -28,7 +28,7 @@ fn preview(text: &str) -> &str {
 
 /// Constructs the absolute save path for an audio file from a preview slice.
 fn save_path(dir: &str, preview: &str) -> String {
-    format!("{}/{}{}", dir, preview, FILE_EXTENSION)
+    format!("{dir}/{preview}{FILE_EXTENSION}")
 }
 
 fn write_lyrics_tag(path: &str, text: String) -> Result<(), id3::Error> {
