@@ -65,20 +65,17 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(std::env::current_dir)?
         .to_string_lossy()
         .into_owned();
-    let text_cap = cli.text_cap;
-    let speaking_rate = cli.speaking_rate;
     let client = Arc::new(TextToSpeech::builder().build().await?);
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
-
     let on_event = move |ClipboardEvent { text }: ClipboardEvent| {
         let result = tokio::task::block_in_place(|| {
             handle.block_on(synthesize(
                 &client,
                 text,
-                text_cap,
+                cli.text_cap,
                 &save_dir,
-                speaking_rate,
+                cli.speaking_rate,
             ))
         });
         if let Err(e) = result.and_then(|audio| play(&stream_handle, audio).map_err(Into::into)) {
