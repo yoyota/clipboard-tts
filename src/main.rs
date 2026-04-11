@@ -5,7 +5,7 @@ use std::time::Duration;
 use clap::Parser;
 use google_cloud_texttospeech_v1::client::TextToSpeech;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 use clipboard_tts::{
     clipboard::{self, ClipboardEvent},
@@ -70,9 +70,9 @@ async fn main() -> anyhow::Result<()> {
     let client = Arc::new(TextToSpeech::builder().build().await?);
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
-    clipboard::watch(
-        Duration::from_millis(cli.poll_ms),
-        move |ClipboardEvent { text }| match tokio::task::block_in_place(|| {
+
+    let on_event = move |ClipboardEvent { text }: ClipboardEvent| {
+        let result = tokio::task::block_in_place(|| {
             handle.block_on(synthesize(
                 &client,
                 text,
@@ -80,16 +80,12 @@ async fn main() -> anyhow::Result<()> {
                 &save_dir,
                 speaking_rate,
             ))
-        }) {
-            Ok(audio) => {
-                if let Err(e) = play(&stream_handle, audio) {
-                    error!(error = %e, "playback failed");
-                }
-            }
-            Err(e) => warn!(error = %e, "synthesis failed"),
-        },
-    )?;
+        });
+        if let Err(e) = result.and_then(|audio| play(&stream_handle, audio).map_err(Into::into)) {
+            error!(error = %e);
+        }
+    };
+
+    clipboard::watch(Duration::from_millis(cli.poll_ms), on_event)?;
     Ok(())
 }
-
-fn on_event() {}
