@@ -73,7 +73,13 @@ async fn main() -> anyhow::Result<()> {
     clipboard::watch(
         Duration::from_millis(cli.poll_ms),
         move |ClipboardEvent { text }| match tokio::task::block_in_place(|| {
-            handle.block_on(synthesize(&client, text, text_cap, &save_dir, speaking_rate))
+            handle.block_on(synthesize(
+                &client,
+                text,
+                text_cap,
+                &save_dir,
+                speaking_rate,
+            ))
         }) {
             Ok(audio) => {
                 if let Err(e) = play(&stream_handle, audio) {
@@ -85,3 +91,5 @@ async fn main() -> anyhow::Result<()> {
     )?;
     Ok(())
 }
+
+fn on_event() {}
