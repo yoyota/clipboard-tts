@@ -30,24 +30,9 @@ pub fn sanitize(input: &str) -> String {
     out
 }
 
-/// Returns `true` when `input` should be skipped (URL, code, or file path).
-/// Checked on raw input before sanitization strips the relevant characters.
-fn should_skip(input: &str) -> bool {
-    input.contains("//")    // URL scheme or line comment
-        || input.contains('{')
-        || input.contains('}')
-        || input.contains("    ")  // 4-space indented line → likely code block
-        || input.contains('\t')    // tab-indented line → likely code block
-        || input.starts_with('/') // likely a file path
-}
-
 /// Returns `None` when the sanitized result is empty or blank, signalling
 /// that the clipboard content should be silently skipped.
-/// Also returns `None` for URLs, code, and file paths.
 pub fn sanitize_option(input: &str) -> Option<String> {
-    if should_skip(input) {
-        return None;
-    }
     Some(sanitize(input)).filter(|s| !s.is_empty())
 }
 
@@ -78,13 +63,8 @@ impl TextFilter {
 
     /// Returns `true` when `text` should be sent to TTS.
     pub fn should_speak(&self, text: &str) -> bool {
-        if !self.includes.is_empty() && !self.includes.iter().any(|r| r.is_match(text)) {
-            return false;
-        }
-        if self.excludes.iter().any(|r| r.is_match(text)) {
-            return false;
-        }
-        true
+        (self.includes.is_empty() || self.includes.iter().any(|r| r.is_match(text)))
+            && !self.excludes.iter().any(|r| r.is_match(text))
     }
 }
 

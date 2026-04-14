@@ -49,22 +49,6 @@ fn url_sanitized() {
     );
 }
 
-#[test]
-fn option_returns_none_for_https_url() {
-    assert_eq!(sanitize_option("https://example.com"), None);
-}
-
-#[test]
-fn option_returns_none_for_http_url() {
-    assert_eq!(sanitize_option("http://example.com/page"), None);
-}
-
-#[test]
-fn option_returns_some_for_plain_text_with_word_https() {
-    // "https" without "://" is not a URL — should still be spoken
-    assert!(sanitize_option("read more at https dot example dot com").is_some());
-}
-
 // ── numbers and mixed content ────────────────────────────────────────────
 
 #[test]
@@ -149,40 +133,6 @@ fn single_character_alpha() {
 #[test]
 fn single_character_special() {
     assert_eq!(sanitize("!"), "");
-}
-
-// ── code detection ───────────────────────────────────────────────────────
-
-#[test]
-fn option_returns_none_for_line_comment() {
-    assert_eq!(sanitize_option("let x = 1; // set x"), None);
-}
-
-#[test]
-fn option_returns_none_for_block_comment() {
-    assert_eq!(sanitize_option("/* initialize */ int x = 0;"), None);
-}
-
-#[test]
-fn option_returns_none_for_braces_and_semicolon() {
-    assert_eq!(sanitize_option("fn foo() { bar(); }"), None);
-}
-
-#[test]
-fn option_returns_none_for_file_path() {
-    assert_eq!(sanitize_option("/home/user/documents/file.txt"), None);
-    assert_eq!(sanitize_option("/usr/bin/cargo"), None);
-}
-
-#[test]
-fn option_returns_none_for_four_space_indent_and_brace() {
-    assert_eq!(sanitize_option("if condition {\n    do_thing();\n}"), None);
-}
-
-#[test]
-fn option_returns_some_for_prose_with_semicolon() {
-    // semicolons appear in plain English — should not be treated as code
-    assert!(sanitize_option("I bought apples; they were fresh").is_some());
 }
 
 // ── sanitize_option ──────────────────────────────────────────────────────
