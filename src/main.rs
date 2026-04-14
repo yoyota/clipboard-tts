@@ -9,6 +9,7 @@ use tracing::{error, info};
 
 use clipboard_tts::{
     clipboard::{self, ClipboardEvent},
+    sanitizer::TextFilter,
     tts::{synthesize, GOOGLE_TTS_MAX_BYTES},
 };
 
@@ -36,6 +37,16 @@ struct Cli {
     /// Log verbosity: error | warn | info | debug | trace
     #[arg(long, default_value = "info", env = "RUST_LOG")]
     log_level: String,
+
+    /// Only speak clipboard text matching at least one of these regex patterns.
+    /// May be specified multiple times.
+    #[arg(long)]
+    include: Vec<String>,
+
+    /// Suppress TTS for clipboard text matching any of these regex patterns.
+    /// May be specified multiple times.
+    #[arg(long)]
+    exclude: Vec<String>,
 }
 
 fn play(stream_handle: &OutputStreamHandle, bytes: Vec<u8>) -> anyhow::Result<()> {
@@ -59,10 +70,14 @@ async fn main() -> anyhow::Result<()> {
 
     info!(poll_ms = cli.poll_ms, "listening for clipboard changes");
 
+    let filter = Arc::new(
+        TextFilter::new(&cli.include, &cli.exclude)
+            .map_err(|e| anyhow::anyhow!("invalid regex in --include / --exclude: {e}"))?,
+    );
+
     let save_dir = cli
         .save_dir
-        .map(Ok)
-        .unwrap_or_else(std::env::current_dir)?
+        .map_or_else(std::env::current_dir, Ok)?
         .to_string_lossy()
         .into_owned();
     let client = Arc::new(TextToSpeech::builder().build().await?);
@@ -83,6 +98,6 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
-    clipboard::watch(Duration::from_millis(cli.poll_ms), on_event)?;
+    clipboard::watch(Duration::from_millis(cli.poll_ms), filter, on_event)?;
     Ok(())
 }
