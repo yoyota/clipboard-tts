@@ -39,8 +39,3 @@ The binary (`src/main.rs`) is a thin orchestrator. All logic lives in the librar
 
 - **Google Cloud credentials** must be available (Application Default Credentials or `GOOGLE_APPLICATION_CREDENTIALS`). The TTS client is built with `.builder().build()` which reads credentials from the environment.
 - Audio playback uses `rodio` with the `mp3` feature, which requires a system audio output device.
-
-### Known TODOs in code
-
-- `tts.rs`: Text is hard-capped at 251 chars before logging the preview (the cap does not truncate what's sent to the API).
-- `tts.rs`: The save path `/home/yoyota/Music/` is hardcoded.
