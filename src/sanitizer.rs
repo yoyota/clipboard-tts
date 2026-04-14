@@ -48,11 +48,43 @@ pub fn sanitize_option(input: &str) -> Option<String> {
     if should_skip(input) {
         return None;
     }
-    let s = sanitize(input);
-    if s.is_empty() {
-        None
-    } else {
-        Some(s)
+    Some(sanitize(input)).filter(|s| !s.is_empty())
+}
+
+/// A compiled include/exclude regex filter for clipboard text.
+///
+/// Text passes when:
+///   1. `includes` is empty **or** at least one include pattern matches.
+///   2. No exclude pattern matches.
+pub struct TextFilter {
+    includes: Vec<regex::Regex>,
+    excludes: Vec<regex::Regex>,
+}
+
+impl TextFilter {
+    /// Compiles all patterns eagerly.
+    /// Returns `Err` on the first invalid pattern.
+    pub fn new(includes: &[String], excludes: &[String]) -> Result<Self, regex::Error> {
+        let includes = includes
+            .iter()
+            .map(|p| regex::Regex::new(p))
+            .collect::<Result<Vec<_>, _>>()?;
+        let excludes = excludes
+            .iter()
+            .map(|p| regex::Regex::new(p))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self { includes, excludes })
+    }
+
+    /// Returns `true` when `text` should be sent to TTS.
+    pub fn should_speak(&self, text: &str) -> bool {
+        if !self.includes.is_empty() && !self.includes.iter().any(|r| r.is_match(text)) {
+            return false;
+        }
+        if self.excludes.iter().any(|r| r.is_match(text)) {
+            return false;
+        }
+        true
     }
 }
 

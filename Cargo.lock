@@ -381,6 +381,7 @@ dependencies = [
  "clap",
  "google-cloud-texttospeech-v1",
  "id3",
+ "regex",
  "rodio",
  "thiserror 1.0.69",
  "tokio",
