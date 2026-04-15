@@ -48,8 +48,8 @@ where
         if let Some(clean) = clipboard
             .get_text()
             .ok()
+            .filter(|raw| filter.should_speak(raw))
             .and_then(|raw| sanitize_option(&raw))
-            .filter(|clean| filter.should_speak(clean))
         {
             let h = hash_str(&clean);
             if last_hash != Some(h) {
