@@ -1,4 +1,5 @@
-/// Strips every character that is not ASCII alphanumeric (A–Z, a–z, 0–9).
+/// Strips every character that is not ASCII alphanumeric (A–Z, a–z, 0–9) or
+/// an apostrophe (`'`), so contractions like "don't" survive intact.
 /// Consecutive removed characters are collapsed into a single space so that
 /// word boundaries are preserved for TTS rendering.
 ///
@@ -7,13 +8,14 @@
 /// use clipboard_tts::sanitizer::sanitize;
 /// assert_eq!(sanitize("Hello, World!"), "Hello World");
 /// assert_eq!(sanitize("foo@bar.com"),   "foo bar com");
+/// assert_eq!(sanitize("don't stop"),    "don't stop");
 /// ```
 pub fn sanitize(input: &str) -> String {
     let mut out = String::with_capacity(input.len());
     let mut last_was_space = true; // suppress leading space
 
     for ch in input.chars() {
-        if ch.is_ascii_alphanumeric() {
+        if ch.is_ascii_alphanumeric() || ch == '\'' {
             out.push(ch);
             last_was_space = false;
         } else if !last_was_space {
