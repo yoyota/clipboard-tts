@@ -7,6 +7,10 @@ edition = "2021"
 name = "clipboard-tts"
 path = "src/main.rs"
 
+[[bin]]
+name = "tts-loop-watch"
+path = "src/bin/tts-loop-watch.rs"
+
 [lib]
 name = "clipboard_tts"
 path = "src/lib.rs"
@@ -23,6 +27,7 @@ thiserror = "1"
 google-cloud-texttospeech-v1 = "1.9.0"
 id3 = "1"
 regex = "1"
+notify = "8"
 
 [profile.release]
 opt-level = 3
