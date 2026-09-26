@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Loop the newest audio file in ~/Music. Re-running restarts with the newest file.
+set -euo pipefail
+dir="$HOME/Music"
+latest=$(ls -t "$dir"/*.{mp3,wav,ogg} 2>/dev/null | head -n1 || true)
+if [[ -z "$latest" ]]; then
+  notify-send "tts-loop" "No audio in $dir" 2>/dev/null || true
+  exit 1
+fi
+systemctl --user stop tts-loop.service 2>/dev/null || true
+systemd-run --user --quiet --collect --unit=tts-loop \
+  /usr/bin/ffplay -nodisp -loglevel quiet -loop 0 "$latest"
+notify-send -t 1500 "🔁 Looping" "$(basename "$latest")" 2>/dev/null || true

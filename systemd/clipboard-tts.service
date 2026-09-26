@@ -1,0 +1,37 @@
+[Unit]
+Description=Clipboard Text-to-Speech
+Documentation=https://github.com/yoyota/clipboard-tts
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/clipboard-tts \
+    --save-dir %h/Music \
+    --poll-ms 500 \
+    --text-cap 200 \
+    --speaking-rate 0.83 \
+    --exclude '/.*/' \
+    --exclude '[{}]' \
+    --exclude ' {4}|\t' \
+    --exclude '(?s).{401}' \
+    --exclude '(?s)\n.*\n' \
+    --exclude '\d.*\d.*\d.*\d.*\d' \
+    --log-level warn
+
+# Clipboard access: arboard needs the display server session
+Environment=DISPLAY=:0
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=XDG_RUNTIME_DIR=%t
+
+# Google Cloud credentials
+Environment=GOOGLE_APPLICATION_CREDENTIALS=%h/.gcp/account.json
+
+# Audio output
+Environment=PULSE_RUNTIME_PATH=%t/pulse
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

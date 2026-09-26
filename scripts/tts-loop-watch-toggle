@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Turn the ~/Music watcher (auto-loop of new TTS clips) on or off.
+if systemctl --user is-active --quiet tts-loop-watch.service; then
+  systemctl --user stop tts-loop-watch.service
+  notify-send -t 1500 "tts-loop-watch" "⏸ Auto-loop off" 2>/dev/null || true
+else
+  systemctl --user start tts-loop-watch.service
+  notify-send -t 1500 "tts-loop-watch" "▶ Auto-loop on" 2>/dev/null || true
+fi

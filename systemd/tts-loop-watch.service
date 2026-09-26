@@ -1,0 +1,13 @@
+[Unit]
+Description=Loop each new TTS clip in ~/Music after its one-time playback
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/tts-loop-watch --dir %h/Music
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Stop the loop started by tts-loop.
+systemctl --user stop tts-loop.service 2>/dev/null || true
