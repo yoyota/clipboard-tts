@@ -82,6 +82,39 @@ Clipboard poll
 
 The sanitizer strips non-alphanumeric characters and heuristically skips content that looks like code or file paths (e.g. text starting with `/`, containing `{`, `}`, `//`, 4-space indentation, or tab indentation).
 
+## Loop Tools
+
+Helpers for replaying the saved clips on repeat. Playback runs in the `tts-loop` systemd user unit (`ffplay -loop 0`), so every tool below controls the same player.
+
+| Tool                    | What it does                                                          |
+| ----------------------- | --------------------------------------------------------------------- |
+| `tts-loop`              | Loop the newest audio file in `~/Music`                               |
+| `tts-loop-stop`         | Stop the loop                                                         |
+| `tts-loop-watch`        | Daemon: loop each new clip after clipboard-tts finishes playing it once |
+| `tts-loop-watch-toggle` | Turn the `tts-loop-watch` service on or off                           |
+
+`tts-loop-watch` waits for write events on a new file to go quiet (`--debounce-ms`, default 300), then waits the clip's duration (via `ffprobe`) plus `--margin-ms` (default 500) before looping it. clipboard-tts starts playback right after its last write, so this lines up with the end of the one-time playback. A newer file always replaces the pending one.
+
+Requires `ffplay`/`ffprobe` (ffmpeg) and `notify-send`.
+
+## Repository Layout
+
+```
+src/main.rs                 clipboard-tts daemon
+src/bin/tts-loop-watch.rs   directory watcher daemon
+src/*.rs                    library modules (each with a *_tests.rs file)
+scripts/                    shell helpers, installed to ~/.local/bin
+systemd/                    user units, installed to ~/.config/systemd/user
+install.sh                  build + install everything, restart running units
+```
+
+Install or update everything with `./install.sh`. The units are not enabled automatically:
+
+```bash
+systemctl --user enable --now clipboard-tts
+systemctl --user enable tts-loop-watch   # optional: auto-loop at login
+```
+
 ## License
 
 MIT
