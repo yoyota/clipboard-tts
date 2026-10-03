@@ -10,7 +10,7 @@ use tracing::{error, info};
 use clipboard_tts::{
     clipboard::{self, ClipboardEvent},
     sanitizer::TextFilter,
-    tts::{synthesize, GOOGLE_TTS_MAX_BYTES},
+    tts::{synthesize_with_reauth, GOOGLE_TTS_MAX_BYTES},
 };
 
 /// Clipboard Text-to-Speech — speaks whatever you copy.
@@ -49,13 +49,6 @@ struct Cli {
     exclude: Vec<String>,
 }
 
-fn play(stream_handle: &OutputStreamHandle, bytes: Vec<u8>) -> anyhow::Result<()> {
-    let sink = Sink::try_new(stream_handle)?;
-    sink.append(Decoder::new(std::io::Cursor::new(bytes))?);
-    sink.sleep_until_end();
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
@@ -80,13 +73,13 @@ async fn main() -> anyhow::Result<()> {
         .map_or_else(std::env::current_dir, Ok)?
         .to_string_lossy()
         .into_owned();
-    let client = Arc::new(TextToSpeech::builder().build().await?);
+    let mut client = TextToSpeech::builder().build().await?;
     let (_stream, stream_handle) = OutputStream::try_default()?;
     let handle = tokio::runtime::Handle::current();
     let on_event = move |ClipboardEvent { text }: ClipboardEvent| {
         let result = tokio::task::block_in_place(|| {
-            handle.block_on(synthesize(
-                &client,
+            handle.block_on(synthesize_with_reauth(
+                &mut client,
                 text,
                 cli.text_cap,
                 &save_dir,
@@ -99,5 +92,12 @@ async fn main() -> anyhow::Result<()> {
     };
 
     clipboard::watch(Duration::from_millis(cli.poll_ms), filter, on_event)?;
+    Ok(())
+}
+
+fn play(stream_handle: &OutputStreamHandle, bytes: Vec<u8>) -> anyhow::Result<()> {
+    let sink = Sink::try_new(stream_handle)?;
+    sink.append(Decoder::new(std::io::Cursor::new(bytes))?);
+    sink.sleep_until_end();
     Ok(())
 }
