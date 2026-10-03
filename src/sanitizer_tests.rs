@@ -264,11 +264,7 @@ mod text_filter_include_only {
 
     #[test]
     fn multiple_include_patterns_or_semantics_second_matches() {
-        let f = TextFilter::new(
-            &["alpha".to_string(), "beta".to_string()],
-            &[],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["alpha".to_string(), "beta".to_string()], &[]).unwrap();
         let text = "this is beta testing";
         assert!(
             f.should_speak(text),
@@ -278,11 +274,7 @@ mod text_filter_include_only {
 
     #[test]
     fn multiple_include_patterns_none_match_returns_false() {
-        let f = TextFilter::new(
-            &["alpha".to_string(), "beta".to_string()],
-            &[],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["alpha".to_string(), "beta".to_string()], &[]).unwrap();
         let text = "gamma ray";
         assert!(
             !f.should_speak(text),
@@ -347,11 +339,7 @@ mod text_filter_include_and_exclude {
 
     #[test]
     fn matches_include_no_exclude_returns_true() {
-        let f = TextFilter::new(
-            &["important".to_string()],
-            &["skip".to_string()],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["important".to_string()], &["skip".to_string()]).unwrap();
         let text = "this is important";
         assert!(
             f.should_speak(text),
@@ -362,11 +350,7 @@ mod text_filter_include_and_exclude {
     #[test]
     fn matches_include_and_exclude_returns_false() {
         // Exclude wins over include.
-        let f = TextFilter::new(
-            &["important".to_string()],
-            &["skip".to_string()],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["important".to_string()], &["skip".to_string()]).unwrap();
         let text = "important but skip this";
         assert!(
             !f.should_speak(text),
@@ -377,11 +361,7 @@ mod text_filter_include_and_exclude {
     #[test]
     fn matches_no_include_but_matches_exclude_returns_false() {
         // Include gate fails first; result must still be false.
-        let f = TextFilter::new(
-            &["needed".to_string()],
-            &["skip".to_string()],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["needed".to_string()], &["skip".to_string()]).unwrap();
         let text = "please skip this one";
         assert!(
             !f.should_speak(text),
@@ -392,11 +372,7 @@ mod text_filter_include_and_exclude {
     #[test]
     fn matches_no_include_and_no_exclude_returns_false() {
         // Include gate is set but nothing matches → false regardless of exclude.
-        let f = TextFilter::new(
-            &["needed".to_string()],
-            &["skip".to_string()],
-        )
-        .unwrap();
+        let f = TextFilter::new(&["needed".to_string()], &["skip".to_string()]).unwrap();
         let text = "completely unrelated";
         assert!(
             !f.should_speak(text),
